@@ -9,6 +9,8 @@ use crate::ast::{BooleanExpression, PropertyValue, ValueExpression};
 use datafusion::logical_expr::{col, lit, BinaryExpr, Expr, Operator};
 use datafusion_functions_aggregate::average::avg;
 use datafusion_functions_aggregate::count::count;
+use datafusion_functions_aggregate::min_max::max;
+use datafusion_functions_aggregate::min_max::min;
 use datafusion_functions_aggregate::sum::sum;
 
 /// Convert BooleanExpression to DataFusion Expr
@@ -127,6 +129,22 @@ pub(crate) fn to_df_value_expr(expr: &ValueExpression) -> Expr {
                     if args.len() == 1 {
                         let arg_expr = to_df_value_expr(&args[0]);
                         avg(arg_expr)
+                    } else {
+                        lit(0)
+                    }
+                }
+                "min" => {
+                    if args.len() == 1 {
+                        let arg_expr = to_df_value_expr(&args[0]);
+                        min(arg_expr)
+                    } else {
+                        lit(0)
+                    }
+                }
+                "max" => {
+                    if args.len() == 1 {
+                        let arg_expr = to_df_value_expr(&args[0]);
+                        max(arg_expr)
                     } else {
                         lit(0)
                     }
@@ -555,6 +573,44 @@ mod tests {
         assert!(s.contains("p__amount"), "Should contain column reference");
     }
 
+    #[test]
+    fn test_value_expr_function_min() {
+        let expr = ValueExpression::Function {
+            name: "MIN".into(),
+            args: vec![ValueExpression::Property(PropertyRef {
+                variable: "p".into(),
+                property: "amount".into(),
+            })],
+        };
+
+        let df_expr = to_df_value_expr(&expr);
+        let s = format!("{:?}", df_expr);
+        assert!(
+            s.contains("min") || s.contains("Min"),
+            "Should be MIN function"
+        );
+        assert!(s.contains("p__amount"), "Should contain column reference");
+    }
+
+    #[test]
+    fn test_value_expr_function_max() {
+        let expr = ValueExpression::Function {
+            name: "MAX".into(),
+            args: vec![ValueExpression::Property(PropertyRef {
+                variable: "p".into(),
+                property: "amount".into(),
+            })],
+        };
+
+        let df_expr = to_df_value_expr(&expr);
+        let s = format!("{:?}", df_expr);
+        assert!(
+            s.contains("max") || s.contains("Max"),
+            "Should be MAX function"
+        );
+        assert!(s.contains("p__amount"), "Should contain column reference");
+    }
+
     // ========================================================================
     // Unit tests for contains_aggregate()
     // ========================================================================
@@ -585,6 +641,38 @@ mod tests {
         assert!(
             contains_aggregate(&expr),
             "SUM should be detected as aggregate"
+        );
+    }
+
+    #[test]
+    fn test_contains_aggregate_min() {
+        let expr = ValueExpression::Function {
+            name: "MIN".into(),
+            args: vec![ValueExpression::Property(PropertyRef {
+                variable: "p".into(),
+                property: "value".into(),
+            })],
+        };
+
+        assert!(
+            contains_aggregate(&expr),
+            "MIN should be detected as aggregate"
+        );
+    }
+
+    #[test]
+    fn test_contains_aggregate_max() {
+        let expr = ValueExpression::Function {
+            name: "MAX".into(),
+            args: vec![ValueExpression::Property(PropertyRef {
+                variable: "p".into(),
+                property: "value".into(),
+            })],
+        };
+
+        assert!(
+            contains_aggregate(&expr),
+            "MAX should be detected as aggregate"
         );
     }
 
