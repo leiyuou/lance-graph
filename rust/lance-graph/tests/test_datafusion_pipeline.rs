@@ -3201,7 +3201,7 @@ async fn test_min_max_with_grouping() {
     let query_min =
         CypherQuery::new("MATCH (p:Person) RETURN p.city, min(p.age) AS min_age ORDER BY p.city")
             .unwrap()
-            .with_config(config);
+            .with_config(config.clone());
 
     let query_max =
         CypherQuery::new("MATCH (p:Person) RETURN p.city, max(p.age) AS max_age ORDER BY p.city")
@@ -3212,7 +3212,7 @@ async fn test_min_max_with_grouping() {
     datasets.insert("Person".to_string(), person_batch);
 
     let result_min = query_min
-        .execute(datasets, Some(ExecutionStrategy::DataFusion))
+        .execute(datasets.clone(), Some(ExecutionStrategy::DataFusion))
         .await
         .unwrap();
 
