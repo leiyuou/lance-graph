@@ -3273,7 +3273,6 @@ async fn test_min_max_with_grouping() {
     assert_eq!(min_col_min.value(3), 35);
     assert_eq!(min_col_max.value(3), 35);
 
-
     assert_eq!(city_col_min.value(4), "Seattle"); // Eve
     assert_eq!(city_col_max.value(4), "Seattle");
     assert_eq!(min_col_min.value(4), 28);
