@@ -106,6 +106,7 @@ impl DataFusionPlanner {
         for (k, v) in params.target_properties.iter() {
             let lit_expr = super::expression::to_df_value_expr(
                 &crate::ast::ValueExpression::Literal(v.clone()),
+                ctx.parameters,
             );
             let filter_expr = Expr::BinaryExpr(BinaryExpr {
                 left: Box::new(col(k.to_lowercase())),
